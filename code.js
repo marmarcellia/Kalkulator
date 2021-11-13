@@ -355,39 +355,6 @@ function calculator(button){
     updateOutputOperation(data.operation.join(''));
 }
 
-//power bases getter
-function powerBasesGetter(formula, POWER_SEARCH_RESULT) {
-    let powers_bases = [];
-
-    POWER_SEARCH_RESULT.forEach(power_index => {
-        let base = [];
-
-        let parentheses_count=0;
-
-        let previous_index = power_index - 1;
-
-        while( previous_index >= 0){
-            if(formula[previous_index] == "(") parentheses_count--;
-            if(formula[previous_index] == ")") parentheses_count++;
-
-            let is_operator = false;
-            OPERATORS.forEach( OPERATOR => {
-                if(formula[previous_index] == OPERATOR) is_operator = true;
-            })
-
-            let is_power = formula[previous_index] == POWER;
-
-            if((is_operator && parentheses_count == 0) || is_power) break;
-
-            base.unshift( formula[previous_index]);
-            previous_index--;
-        }
-
-        powers_bases.push( base.join('');)
-    })
-
-    return powers_bases;
-}
 
 //search 
 function search( array, keyword){
