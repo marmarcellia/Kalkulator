@@ -331,8 +331,18 @@ function calculator(button){
         let POWER_SEARCH_RESULT = search(data.formula, POWER);
         let FACTORIAL_SEARCH_RESULT = search(data.formula, FACTORIAL);
 
-        const BASES = powerBasesGetter(data.formula, POWER_SEARCH_RESULT);
-        console.log(BASES);
+        const BASES = powerBaseGetter(data.formula, POWER_SEARCH_RESULT);
+        BASES.forEach( base => {
+            let toReplace = base + POWER;
+            let replacement = "Math.pow(" + base + ",";
+
+            formula_str = formula_str.replace(toReplace, replacement);
+        })
+
+        const NUMBERS = factorialNumberGetter(data.formula, FACTORIAL_SEARCH_RESULT);  
+        NUMBERS.forEach( factorial => {
+            formula_str = formula_str.replace(factorial.toReplace, factorial.replacement);
+        })
         
         let result;
         try{
@@ -350,11 +360,92 @@ function calculator(button){
         data.operation = [ result ];
         data.formula = [ result ];
         updateOutputResult(result);
+        return;
     }
 
     updateOutputOperation(data.operation.join(''));
 }
 
+//factorial number getter
+function factorialNumberGetter(formula, FACTORIAL_SEARCH_RESULT){
+    let numbers = [];
+    let factorial_sequence = 0;
+
+    FACTORIAL_SEARCH_RESULT.forEach( factorial_index => {
+        let number =[];
+
+        let next_index = factorial_index + 1;
+        let next_input = formula[next_index];
+
+        if( next_input == FACTORIAL ){
+            factorial_sequence += 1;
+            return
+        }
+
+        let first_factorial_index = factorial_index - factorial_sequence;
+
+        let previous_index = first_factorial_index - 1;
+        let parentheses_count = 0;
+        while( previous_index >= 0 ){
+            if( formula[previous_index] == "(" ) parentheses_count--;
+            if( formula[previous_index] == ")" ) parentheses_count++;
+
+            let is_operator = false;
+            OPERATORS.forEach( OPERATOR => {
+                if( formula[previous_index] == OPERATOR ) is_operator = true;
+            })
+
+            if( is_operator && parentheses_count == 0 ) break;
+
+            number.unshift( formula[previous_index]);
+            previous_index--;
+        }
+
+        let number_str = number.join('');
+        const factorial = "factorial(", close_parentheses = ")"
+        let times = factorial_sequence + 1;
+
+        let toReplace = number_str + FACTORIAL.repeat(times);
+        let replacement = factorial.repeat(times) + number_str + close_parentheses.repeat(times);
+
+        numbers.push({
+            toReplace : toReplace,
+            replacement : replacement
+        })
+
+        factorial_sequence = 0;
+    })
+
+    return numbers;
+}
+
+//power base getter
+function powerBaseGetter(formula, POWER_SEARCH_RESULT){
+    let powers_bases = [];
+    POWER_SEARCH_RESULT.forEach( power_index => {
+        let base = [];
+        let parentheses_count = 0;
+        let previous_index = power_index - 1;
+        while( previous_index >= 0 ){
+            if( formula[previous_index] == "(" ) parentheses_count--;
+            if( formula[previous_index] == ")" ) parentheses_count++;
+
+            let is_operator = false;
+            OPERATORS.forEach( OPERATOR => {
+                if( formula[previous_index] == OPERATOR ) is_operator = true;
+            })
+
+            let is_power = formula[previous_index] == POWER;
+
+            if((is_operator && parentheses_count == 0) || is_power) break;
+
+            base.unshift( formula[previous_index]);
+            previous_index--;
+        }
+        powers_bases.push( base.join('') );
+    })
+    return powers_bases;
+}
 
 //search 
 function search( array, keyword){
